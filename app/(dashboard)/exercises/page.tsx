@@ -4,20 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import {
   loadExercises,
   searchExercises,
-  MUSCLE_GROUPS,
+  BODY_PARTS,
+  TRAINING_TYPES,
   type ExerciseInfo,
 } from "@/lib/exercise-db";
 import ExerciseAnimation from "@/components/ExerciseAnimation";
 import { Badge, Input, PageHeader, Card } from "@/components/ui";
 
-const LEVELS = ["beginner", "intermediate", "expert"];
-
 export default function ExercisesPage() {
   const [all, setAll] = useState<ExerciseInfo[] | null>(null);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
-  const [muscle, setMuscle] = useState("");
-  const [level, setLevel] = useState("");
+  const [bodyPart, setBodyPart] = useState("");
+  const [trainingType, setTrainingType] = useState("");
   const [selected, setSelected] = useState<ExerciseInfo | null>(null);
 
   useEffect(() => {
@@ -28,10 +27,10 @@ export default function ExercisesPage() {
     if (!all) return [];
     return searchExercises(all, {
       query,
-      muscle: muscle || undefined,
-      level: level || undefined,
+      bodyPart: bodyPart || undefined,
+      trainingType: trainingType || undefined,
     }).slice(0, 60);
-  }, [all, query, muscle, level]);
+  }, [all, query, bodyPart, trainingType]);
 
   return (
     <>
@@ -39,7 +38,7 @@ export default function ExercisesPage() {
         title="Exercise Library"
         subtitle={
           all
-            ? `${all.length} exercises with animated form guides (free-exercise-db)`
+            ? `${all.length} exercises with animated form guides (ExerciseDB)`
             : "Loading library…"
         }
       />
@@ -52,26 +51,26 @@ export default function ExercisesPage() {
           className="max-w-xs"
         />
         <select
-          value={muscle}
-          onChange={(e) => setMuscle(e.target.value)}
+          value={bodyPart}
+          onChange={(e) => setBodyPart(e.target.value)}
           className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
         >
-          <option value="">All muscles</option>
-          {MUSCLE_GROUPS.map((m) => (
-            <option key={m} value={m}>
-              {m}
+          <option value="">All body parts</option>
+          {BODY_PARTS.map((b) => (
+            <option key={b} value={b}>
+              {b}
             </option>
           ))}
         </select>
         <select
-          value={level}
-          onChange={(e) => setLevel(e.target.value)}
+          value={trainingType}
+          onChange={(e) => setTrainingType(e.target.value)}
           className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
         >
-          <option value="">All levels</option>
-          {LEVELS.map((l) => (
-            <option key={l} value={l}>
-              {l}
+          <option value="">All types</option>
+          {TRAINING_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {t}
             </option>
           ))}
         </select>
@@ -93,12 +92,14 @@ export default function ExercisesPage() {
             onClick={() => setSelected(e)}
             className="group overflow-hidden rounded-xl border border-border bg-surface text-left transition-colors hover:border-primary/60"
           >
-            <ExerciseAnimation frames={e.frames} alt={e.name} className="h-36 w-full" />
+            <ExerciseAnimation gifUrl={e.gifUrl} alt={e.name} className="h-36 w-full" />
             <div className="p-3">
               <p className="line-clamp-2 text-sm font-medium">{e.name}</p>
               <div className="mt-2 flex flex-wrap gap-1">
-                <Badge color="primary">{e.primaryMuscles[0] ?? e.category}</Badge>
-                {e.equipment && <Badge>{e.equipment}</Badge>}
+                <Badge color="primary">
+                  {e.primaryMuscles[0] ?? e.trainingType ?? "exercise"}
+                </Badge>
+                {e.equipment[0] && <Badge>{e.equipment[0]}</Badge>}
               </div>
             </div>
           </button>
@@ -124,7 +125,7 @@ export default function ExercisesPage() {
               </button>
             </div>
             <ExerciseAnimation
-              frames={selected.frames}
+              gifUrl={selected.gifUrl}
               alt={selected.name}
               className="h-64 w-full rounded-lg"
             />
@@ -137,10 +138,14 @@ export default function ExercisesPage() {
               {selected.secondaryMuscles.map((m) => (
                 <Badge key={m}>{m}</Badge>
               ))}
-              {selected.equipment && (
-                <Badge color="load">{selected.equipment}</Badge>
+              {selected.equipment.map((eq) => (
+                <Badge key={eq} color="load">
+                  {eq}
+                </Badge>
+              ))}
+              {selected.trainingType && (
+                <Badge color="info">{selected.trainingType}</Badge>
               )}
-              <Badge color="info">{selected.level}</Badge>
             </div>
             <ol className="mt-4 list-decimal space-y-1.5 pl-5 text-sm text-text-dim">
               {selected.instructions.map((step, i) => (

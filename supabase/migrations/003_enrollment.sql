@@ -1,4 +1,4 @@
--- KamilFit — enrollment (coach roster) + assignment support
+-- ProFit — enrollment (coach roster) + assignment support
 -- Run after 001_schema.sql and 002_rls.sql.
 
 -- =============== coach roster ===============

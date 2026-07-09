@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   loadExercises,
   searchExercises,
-  MUSCLE_GROUPS,
+  BODY_PARTS,
+  TRAINING_TYPES,
   type ExerciseInfo,
 } from "@/lib/exercise-db";
 import ExerciseAnimation from "./ExerciseAnimation";
@@ -20,7 +21,8 @@ export default function ExercisePickerModal({
   const [all, setAll] = useState<ExerciseInfo[] | null>(null);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
-  const [muscle, setMuscle] = useState("");
+  const [bodyPart, setBodyPart] = useState("");
+  const [trainingType, setTrainingType] = useState("");
 
   useEffect(() => {
     loadExercises().then(setAll).catch(() => setError(true));
@@ -28,8 +30,12 @@ export default function ExercisePickerModal({
 
   const results = useMemo(() => {
     if (!all) return [];
-    return searchExercises(all, { query, muscle: muscle || undefined }).slice(0, 30);
-  }, [all, query, muscle]);
+    return searchExercises(all, {
+      query,
+      bodyPart: bodyPart || undefined,
+      trainingType: trainingType || undefined,
+    }).slice(0, 30);
+  }, [all, query, bodyPart, trainingType]);
 
   return (
     <div
@@ -48,14 +54,26 @@ export default function ExercisePickerModal({
             onChange={(e) => setQuery(e.target.value)}
           />
           <select
-            value={muscle}
-            onChange={(e) => setMuscle(e.target.value)}
+            value={bodyPart}
+            onChange={(e) => setBodyPart(e.target.value)}
             className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
           >
-            <option value="">All muscles</option>
-            {MUSCLE_GROUPS.map((m) => (
-              <option key={m} value={m}>
-                {m}
+            <option value="">All body parts</option>
+            {BODY_PARTS.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+          <select
+            value={trainingType}
+            onChange={(e) => setTrainingType(e.target.value)}
+            className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
+          >
+            <option value="">All types</option>
+            {TRAINING_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t}
               </option>
             ))}
           </select>
@@ -81,11 +99,13 @@ export default function ExercisePickerModal({
               onClick={() => onPick(e)}
               className="group overflow-hidden rounded-lg border border-border bg-surface-2 text-left transition-colors hover:border-primary/60"
             >
-              <ExerciseAnimation frames={e.frames} alt={e.name} className="h-28 w-full" />
+              <ExerciseAnimation gifUrl={e.gifUrl} alt={e.name} className="h-28 w-full" />
               <div className="p-2">
                 <p className="line-clamp-2 text-xs font-medium">{e.name}</p>
                 <div className="mt-1">
-                  <Badge color="primary">{e.primaryMuscles[0] ?? e.category}</Badge>
+                  <Badge color="primary">
+                    {e.primaryMuscles[0] ?? e.trainingType ?? "exercise"}
+                  </Badge>
                 </div>
               </div>
             </button>

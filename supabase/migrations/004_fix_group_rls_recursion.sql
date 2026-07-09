@@ -1,4 +1,4 @@
--- KamilFit — fix infinite RLS recursion between groups <-> group_members
+-- ProFit — fix infinite RLS recursion between groups <-> group_members
 -- (and the profiles policy that joins them directly).
 --
 -- security definer functions run as the function owner (table owner), which

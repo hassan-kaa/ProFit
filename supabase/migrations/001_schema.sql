@@ -1,4 +1,4 @@
--- KamilFit — initial schema
+-- ProFit — initial schema
 -- Run in the Supabase SQL editor, or `supabase db push`.
 
 -- =============== profiles ===============

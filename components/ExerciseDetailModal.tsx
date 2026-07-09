@@ -61,7 +61,7 @@ export default function ExerciseDetailModal({
         {exercise && (
           <>
             <ExerciseAnimation
-              frames={exercise.frames}
+              gifUrl={exercise.gifUrl}
               alt={exercise.name}
               className="h-64 w-full rounded-lg"
             />
@@ -71,10 +71,14 @@ export default function ExerciseDetailModal({
                   {m}
                 </Badge>
               ))}
-              {exercise.equipment && (
-                <Badge color="load">{exercise.equipment}</Badge>
+              {exercise.equipment.map((eq) => (
+                <Badge key={eq} color="load">
+                  {eq}
+                </Badge>
+              ))}
+              {exercise.trainingType && (
+                <Badge color="info">{exercise.trainingType}</Badge>
               )}
-              <Badge color="info">{exercise.level}</Badge>
             </div>
             <ol className="mt-4 list-decimal space-y-1.5 pl-5 text-sm text-text-dim">
               {exercise.instructions.map((step, i) => (

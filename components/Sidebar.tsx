@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useProfile, signOut } from "@/lib/data";
+import Logo from "./Logo";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: "▦" },
@@ -20,13 +21,8 @@ export default function Sidebar({ demo = false }: { demo?: boolean }) {
 
   return (
     <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
-      <div className="flex items-center gap-2 px-5 py-5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-black text-primary-ink">
-          K
-        </span>
-        <span className="text-lg font-bold tracking-tight">
-          Kamil<span className="text-primary">Fit</span>
-        </span>
+      <div className="px-5 py-5">
+        <Logo heightClass="h-10" />
       </div>
 
       <nav className="flex-1 space-y-1 px-3">

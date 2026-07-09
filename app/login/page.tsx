@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { Button, Input, Card } from "@/components/ui";
+import Logo from "@/components/Logo";
 
 /** Coach login/signup. Students use /login/student. */
 export default function CoachLoginPage() {
@@ -60,13 +61,8 @@ export default function CoachLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-sm p-6">
-        <div className="mb-1 flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary font-black text-primary-ink">
-            K
-          </span>
-          <span className="text-xl font-bold">
-            Kamil<span className="text-primary">Fit</span>
-          </span>
+        <div className="mb-1">
+          <Logo heightClass="h-12" />
         </div>
         <p className="mb-6 text-sm text-text-dim">Coach area</p>
 

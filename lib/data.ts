@@ -35,7 +35,7 @@ import type {
 /* events & shared hook plumbing                                       */
 /* ================================================================== */
 
-const EVENT = "kamilfit-data";
+const EVENT = "profit-data";
 
 function notify() {
   window.dispatchEvent(new Event(EVENT));
@@ -84,8 +84,8 @@ export function weekDates(today = getToday()): string[] {
 /* demo-mode storage                                                   */
 /* ================================================================== */
 
-const DEMO_STATE_KEY = "kamilfit-demo-v1";
-const DEMO_STUDENT_KEY = "kamilfit-demo-student";
+const DEMO_STATE_KEY = "profit-demo-v1";
+const DEMO_STUDENT_KEY = "profit-demo-student";
 
 function demoSessions(): Session[] {
   try {

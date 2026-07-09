@@ -1,4 +1,4 @@
--- KamilFit — row level security
+-- ProFit — row level security
 
 alter table public.profiles enable row level security;
 alter table public.groups enable row level security;

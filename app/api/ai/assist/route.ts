@@ -26,7 +26,7 @@ function programToText(p: Program): string {
   return lines.join("\n");
 }
 
-const SYSTEM_PROMPT = `You are the AI assistant inside KamilFit, a coaching app.
+const SYSTEM_PROMPT = `You are the AI assistant inside ProFit, a coaching app.
 You help a certified fitness coach refine training programs.
 
 Rules:

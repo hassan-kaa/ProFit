@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCurrentStudent, useProfile, signOut } from "@/lib/data";
 import { DEMO_STUDENTS } from "@/lib/demo-data";
+import Logo from "./Logo";
 
 const TABS = [
   { href: "/student", label: "Today" },
@@ -31,14 +32,7 @@ export default function StudentShell({
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-info font-black text-primary-ink">
-              K
-            </span>
-            <span className="font-bold">
-              Kamil<span className="text-info">Fit</span>
-            </span>
-          </div>
+          <Logo heightClass="h-8" />
           <div className="flex items-center gap-2">
             {demo ? (
               <>

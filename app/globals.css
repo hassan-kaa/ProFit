@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 /*
-  KamilFit dark theme — color semantics:
-  - lime    → energy / primary actions / progress (training)
+  ProFit dark theme — color semantics:
+  - primary → brand blue (from the logo) / primary actions / progress (training)
   - violet  → AI assistant features
   - orange  → load & intensity indicators
   - sky     → schedule / informational
@@ -20,9 +20,9 @@
   --color-text-dim: #8b98a5;
   --color-text-faint: #5c6773;
 
-  --color-primary: #a3e635; /* lime-400 */
-  --color-primary-dim: #65a30d;
-  --color-primary-ink: #0a0e13;
+  --color-primary: #2e7cf6; /* logo blue */
+  --color-primary-dim: #1c56c9; /* darker logo blue, for hover/secondary emphasis */
+  --color-primary-ink: #f3f8ff; /* light text on top of primary-colored elements */
 
   --color-ai: #a78bfa; /* violet-400 */
   --color-ai-dim: #7c3aed;

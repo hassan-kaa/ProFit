@@ -1,4 +1,4 @@
-# KamilFit — AI-assisted fitness coaching
+# ProFit — AI-assisted fitness coaching
 
 MVP scaffold: Next.js 15 (App Router) + Supabase + Claude API + Tailwind CSS v4.
 
@@ -63,12 +63,19 @@ specific to the open program.
 
 ## Exercise animations
 
-Source: [free-exercise-db](https://github.com/yuhonas/free-exercise-db) —
-public domain, ~870 exercises, no API key. Each exercise has start/end
-position photos which `ExerciseAnimation` cross-fades into a 2-frame
-animation. The adapter lives in `lib/exercise-db.ts`; to upgrade to real GIFs
-later (e.g. [ExerciseDB](https://exercisedb.dev), 11k+ exercises, RapidAPI
-key required), only that file changes.
+Source: [ExerciseDB OSS](https://github.com/bootstrapping-lab/exercisedb-api)
+(AGPL-3.0, non-commercial use — revisit if this ever goes commercial) —
+~1,500 exercises with real animated GIFs, no API key, hotlinked from the
+repo's `/media` folder the same way the previous source was hotlinked. The
+adapter lives in `lib/exercise-db.ts`.
+
+Each exercise also gets a `trainingType` (mobility / strength / coordination
+/ speed / agility / cardio) — a taxonomy the source data doesn't provide, so
+it's produced by a one-time AI classification pass
+(`scripts/classify-exercise-types.mjs`, run with
+`node --env-file=.env scripts/classify-exercise-types.mjs`) and cached in
+`lib/exercise-training-types.json`. Re-run it if the upstream dataset grows;
+already-classified ids are skipped.
 
 ## Coach ↔ student flow (demo mode)
 
@@ -137,8 +144,17 @@ sessions other students chose to share.
 ## Theme
 
 Dark theme with semantic colors (defined in `app/globals.css`):
-lime = training/primary actions, violet = AI features, orange = load/intensity,
-sky = schedule/info, amber = reviews, rose = "too hard" alerts.
+primary blue (from the logo) = training/primary actions, violet = AI features,
+orange = load/intensity, sky = schedule/info, amber = reviews, rose = "too
+hard" alerts.
+
+## Logo
+
+The `Logo` component (`components/Logo.tsx`) renders the brand lockup from
+`public/logo.png` — save the asset there (not committed as a placeholder;
+add your own file) and it's picked up automatically by the sidebar, student
+top-nav, both login pages, and the browser favicon (`app/layout.tsx` →
+`metadata.icons`).
 
 ## Roadmap
 
