@@ -58,6 +58,12 @@ Supabase SQL Editor (no CLI/migration runner wired up):
    `groups` ↔ `group_members` (and the `profiles` policy joining them) by
    routing through security-definer helpers instead of direct cross-table
    subqueries in the policy itself.
+5. `005_session_exercises.sql` — `session_exercises` table: a per-session
+   exercise snapshot taken at generation time (`assignProgramToStudent`), so
+   editing a program's exercises later doesn't retroactively rewrite what an
+   already-completed/reviewed session showed. `sessions.exercises` now reads
+   from this table instead of live-joining `program_exercises` through
+   `program_day_id`.
 
    **Rule for any new cross-table RLS policy**: never let a policy on table A
    subquery table B if B has a policy that subqueries A — wrap the check in a
@@ -151,6 +157,35 @@ not routine feature work (that belongs in git history).
   `public/logo.png` (lockup) + `public/logo-mark.png` (square favicon tile).
   Note: existing demo-mode localStorage state under the old `kamilfit-*`
   keys is intentionally orphaned (fresh demo state on next load).
+- 2026-07-09: shipped editable programs and sessions (previously only
+  create existed). Programs: fixed `createProgram`/`saveProgram` being
+  no-ops in demo mode (the default state of this repo) — they now persist
+  to the `profit-demo-v1` localStorage store like sessions already did.
+  Sessions: added a per-session exercise snapshot (`session_exercises`
+  table, `005_session_exercises.sql`) taken at assignment time, so editing
+  a program no longer retroactively changes already-completed/reviewed
+  sessions; added a Schedule-page session editor (`SessionEditModal`,
+  `rescheduleSession`/`updateSessionExercises` in `lib/data.ts`) to
+  reschedule a session or swap its exercises for that occurrence only,
+  independent of the underlying program day. Also fixed
+  `assignProgramToStudent` being a hard no-op in demo mode.
+- 2026-07-09: made the coach UI mobile-friendly ahead of deployment.
+  `components/Sidebar.tsx` is now an off-canvas drawer below the `lg`
+  breakpoint (hamburger trigger + backdrop, both driven by new
+  `components/DashboardShell.tsx`, which the server `app/(dashboard)/layout.tsx`
+  now delegates to — same server-layout/client-shell split as the student
+  side's `StudentShell.tsx`); static sidebar unchanged at `lg`+. Schedule
+  page's week view now stacks to a single column on mobile instead of
+  forcing horizontal scroll on a fixed `min-w-[1160px]` grid; the spacious
+  7-column view is unchanged at `lg`+. `AiAssistPanel` becomes a full-screen
+  overlay below `lg` instead of a fixed `w-96` panel that would overflow.
+  `ExercisePickerModal`'s filter row now wraps instead of clipping on narrow
+  screens. Along the way, found and fixed a real CSS Grid bug in
+  `ProgramBuilder.tsx`: an explicit `min-h-56` on each day card was being
+  read by `grid-auto-rows: auto` as the row's *actual* size instead of a
+  floor, silently capping every row at 224px regardless of content and
+  causing taller cards to overlap the row below — removing it lets rows
+  size to real content height. Fixed on all breakpoints, not just mobile.
 
 ## Todos
 
@@ -159,11 +194,13 @@ product definition before it's buildable). Update status inline as items
 land; move finished ones to **Progress log** instead of just deleting them.
 
 **Program & session management**
-- [ ] P0 — ability to edit sessions and programs (no edit flow exists yet,
-      only create)
+- [x] P0 — ability to edit sessions and programs (program edit already
+      existed structurally but was a no-op in demo mode; added session
+      reschedule + per-occurrence exercise edit — see Progress log)
 - [ ] P1 — ability to choose whether the coach is assigning a single session
       or a whole weekly program
-- [ ] P2 — ability to choose/reschedule rest days within a program
+- [x] P2 — ability to choose/reschedule rest days within a program (clearer
+      Training/Rest toggle per day in `ProgramBuilder.tsx`; see Progress log)
 
 **Exercise library** — *in progress*
 - [x] P1 — change exercise images to 2D animations (switched to the
@@ -176,8 +213,11 @@ land; move finished ones to **Progress log** instead of just deleting them.
       the "structured program edits" item in Roadmap below)
 
 **UX**
-- [ ] P1 — redesign the calendar/schedule view to be more spacious and
-      easier to read/interact with
+- [x] P1 — redesign the calendar/schedule view to be more spacious and
+      easier to read/interact with (full-height 7-column week view, click a
+      session for detail; see Progress log)
+- [x] P0 — mobile-friendly coach UI + sidebar toggle (off-canvas drawer,
+      responsive schedule/AI-assist/exercise-picker; see Progress log)
 
 **Social**
 - [ ] P2 — define an actual strategy for students sharing sessions (needs

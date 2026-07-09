@@ -69,9 +69,23 @@ export interface Session {
   student_name?: string;
   day_title?: string;
   program_title?: string;
-  /** exercises of the underlying program day (joined at fetch time) */
-  exercises?: ProgramExercise[];
+  /** snapshot taken when the session was generated — edits to the
+   *  underlying program do not retroactively change it */
+  exercises?: SessionExercise[];
   review?: SessionReview | null;
+}
+
+export interface SessionExercise {
+  id: string;
+  session_id: string;
+  position: number;
+  exercise_ref: string | null;
+  exercise_name: string;
+  sets: number | null;
+  reps: string | null;
+  load: string | null;
+  rest_seconds: number | null;
+  notes: string | null;
 }
 
 export interface EnrolledStudent {

@@ -46,12 +46,13 @@ export default function ExercisePickerModal({
         className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-xl border border-border bg-surface"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2 border-b border-border p-4">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border p-4">
           <Input
             autoFocus
             placeholder="Search exercises…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            className="basis-full sm:basis-auto sm:flex-1"
           />
           <select
             value={bodyPart}

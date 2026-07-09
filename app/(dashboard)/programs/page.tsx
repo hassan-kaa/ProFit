@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Card, Badge, PageHeader, Button } from "@/components/ui";
-import { usePrograms, createProgram, demoMode } from "@/lib/data";
+import { usePrograms, createProgram } from "@/lib/data";
 
 export default function ProgramsPage() {
   const programs = usePrograms();
@@ -12,10 +12,6 @@ export default function ProgramsPage() {
   const [creating, setCreating] = useState(false);
 
   async function onCreate() {
-    if (demoMode()) {
-      alert("Demo mode — connect Supabase to create programs.");
-      return;
-    }
     setCreating(true);
     try {
       const id = await createProgram();

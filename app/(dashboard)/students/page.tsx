@@ -9,7 +9,6 @@ import {
   usePrograms,
   enrollStudentByEmail,
   assignProgramToStudent,
-  demoMode,
 } from "@/lib/data";
 import { DIFFICULTY_LABELS, type EnrolledStudent } from "@/lib/types";
 
@@ -271,11 +270,6 @@ function AssignModal({
             }`}
           >
             {result}
-          </p>
-        )}
-        {demoMode() && (
-          <p className="mt-3 text-xs text-review">
-            Demo mode — assignment needs Supabase connected.
           </p>
         )}
 

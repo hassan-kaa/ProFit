@@ -119,7 +119,7 @@ export default function ExercisesPage() {
               <h2 className="text-lg font-bold">{selected.name}</h2>
               <button
                 onClick={() => setSelected(null)}
-                className="cursor-pointer text-text-dim hover:text-text"
+                className="-m-1.5 cursor-pointer p-1.5 text-text-dim hover:text-text"
               >
                 ✕
               </button>

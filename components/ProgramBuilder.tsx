@@ -5,6 +5,7 @@ import type { Program, ProgramDay, ProgramExercise } from "@/lib/types";
 import { DAY_LABELS } from "@/lib/types";
 import type { ExerciseInfo } from "@/lib/exercise-db";
 import ExercisePickerModal from "./ExercisePickerModal";
+import ExerciseRow from "./ExerciseRow";
 import AiAssistPanel from "./AiAssistPanel";
 import { Button, Badge } from "./ui";
 
@@ -131,14 +132,14 @@ export default function ProgramBuilder({
         </div>
 
         {/* week grid */}
-        <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
+        <div className="grid min-h-0 flex-1 auto-rows-auto grid-cols-1 items-start gap-3 overflow-y-auto md:grid-cols-2 xl:grid-cols-7">
           {program.days
             .slice()
             .sort((a, b) => a.day_index - b.day_index)
             .map((day) => (
               <div
                 key={day.id}
-                className={`flex min-h-56 flex-col rounded-xl border p-3 ${
+                className={`flex flex-col rounded-xl border p-3 ${
                   day.is_rest
                     ? "border-border/60 bg-surface/50"
                     : "border-border bg-surface"
@@ -148,17 +149,32 @@ export default function ProgramBuilder({
                   <span className="text-xs font-bold uppercase tracking-wider text-text-faint">
                     {DAY_LABELS[day.day_index] ?? `Day ${day.day_index + 1}`}
                   </span>
-                  <button
-                    onClick={() => toggleRest(day.id)}
-                    className="cursor-pointer text-xs text-text-faint hover:text-text-dim"
-                    title="Toggle rest day"
-                  >
-                    {day.is_rest ? "make training day" : "rest?"}
-                  </button>
+                  <div className="inline-flex rounded-lg border border-border p-0.5 text-[11px] font-medium">
+                    <button
+                      onClick={() => day.is_rest && toggleRest(day.id)}
+                      className={`cursor-pointer rounded px-2 py-0.5 transition-colors ${
+                        day.is_rest
+                          ? "text-text-faint hover:text-text-dim"
+                          : "bg-primary/15 text-primary"
+                      }`}
+                    >
+                      Training
+                    </button>
+                    <button
+                      onClick={() => !day.is_rest && toggleRest(day.id)}
+                      className={`cursor-pointer rounded px-2 py-0.5 transition-colors ${
+                        day.is_rest
+                          ? "bg-surface-2 text-text"
+                          : "text-text-faint hover:text-text-dim"
+                      }`}
+                    >
+                      Rest
+                    </button>
+                  </div>
                 </div>
 
                 {day.is_rest ? (
-                  <div className="flex flex-1 items-center justify-center text-sm text-text-faint">
+                  <div className="py-10 text-center text-sm text-text-faint">
                     Rest day
                   </div>
                 ) : (
@@ -174,7 +190,7 @@ export default function ProgramBuilder({
                       }
                       className="mb-2 rounded-md border border-transparent bg-transparent px-1 py-0.5 text-sm font-semibold outline-none hover:border-border focus:border-primary/60"
                     />
-                    <div className="flex-1 space-y-2">
+                    <div className="space-y-2">
                       {day.exercises.map((ex) => (
                         <ExerciseRow
                           key={ex.id}
@@ -209,62 +225,6 @@ export default function ProgramBuilder({
           onClose={() => setPickerDay(null)}
         />
       )}
-    </div>
-  );
-}
-
-function ExerciseRow({
-  ex,
-  onChange,
-  onRemove,
-}: {
-  ex: ProgramExercise;
-  onChange: (patch: Partial<ProgramExercise>) => void;
-  onRemove: () => void;
-}) {
-  return (
-    <div className="group rounded-lg border border-border bg-surface-2 p-2">
-      <div className="flex items-start justify-between gap-1">
-        <p className="line-clamp-2 text-xs font-medium">{ex.exercise_name}</p>
-        <button
-          onClick={onRemove}
-          className="cursor-pointer text-text-faint opacity-0 transition-opacity hover:text-danger group-hover:opacity-100"
-        >
-          ✕
-        </button>
-      </div>
-      <div className="mt-1.5 grid grid-cols-3 gap-1.5">
-        <label className="block">
-          <span className="text-[10px] uppercase text-text-faint">sets</span>
-          <input
-            type="number"
-            min={1}
-            value={ex.sets ?? ""}
-            onChange={(e) =>
-              onChange({ sets: e.target.value ? Number(e.target.value) : null })
-            }
-            className="w-full rounded border border-border bg-bg px-1.5 py-1 text-xs outline-none focus:border-primary/60"
-          />
-        </label>
-        <label className="block">
-          <span className="text-[10px] uppercase text-text-faint">reps</span>
-          <input
-            value={ex.reps ?? ""}
-            placeholder="8-12"
-            onChange={(e) => onChange({ reps: e.target.value || null })}
-            className="w-full rounded border border-border bg-bg px-1.5 py-1 text-xs outline-none focus:border-primary/60"
-          />
-        </label>
-        <label className="block">
-          <span className="text-[10px] uppercase text-load/80">load</span>
-          <input
-            value={ex.load ?? ""}
-            placeholder="kg / %"
-            onChange={(e) => onChange({ load: e.target.value || null })}
-            className="w-full rounded border border-border bg-bg px-1.5 py-1 text-xs text-load outline-none focus:border-load/60"
-          />
-        </label>
-      </div>
     </div>
   );
 }

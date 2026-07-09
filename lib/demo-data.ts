@@ -2,7 +2,7 @@
  * Demo data — used automatically while Supabase env vars are not set,
  * so the whole coach UI is explorable out of the box.
  */
-import type { Group, Program, Session } from "./types";
+import type { Group, Program, Session, SessionExercise } from "./types";
 
 export const DEMO_COACH = {
   id: "demo-coach",
@@ -223,6 +223,29 @@ export const DEMO_PROGRAMS: Program[] = [
   },
 ];
 
+/** session exercise snapshot — taken once at session-generation time */
+const sx = (
+  sessionId: string,
+  position: number,
+  name: string,
+  ref: string | null,
+  sets: number,
+  reps: string,
+  load: string | null,
+  rest: number
+): SessionExercise => ({
+  id: `${sessionId}-e${position}`,
+  session_id: sessionId,
+  position,
+  exercise_ref: ref,
+  exercise_name: name,
+  sets,
+  reps,
+  load,
+  rest_seconds: rest,
+  notes: null,
+});
+
 export const DEMO_SESSIONS: Session[] = [
   {
     id: "sess1",
@@ -234,6 +257,12 @@ export const DEMO_SESSIONS: Session[] = [
     student_name: "Amine B.",
     day_title: "Upper — Push",
     program_title: "Hypertrophy Block — Amine",
+    exercises: [
+      sx("sess1", 0, "Barbell Bench Press - Medium Grip", "EIeI8Vf", 4, "8-10", "70kg", 120),
+      sx("sess1", 1, "Incline Dumbbell Press", "ns0SIbU", 3, "10-12", "24kg", 90),
+      sx("sess1", 2, "Side Lateral Raise", "DsgkuIt", 3, "12-15", "10kg", 60),
+      sx("sess1", 3, "Triceps Pushdown", "gAwDzB3", 3, "12", "35kg", 60),
+    ],
     review: {
       id: "r1",
       session_id: "sess1",
@@ -254,6 +283,11 @@ export const DEMO_SESSIONS: Session[] = [
     student_name: "Yassine T.",
     day_title: "Full Body A",
     program_title: "Group — Morning Strength Crew",
+    exercises: [
+      sx("sess2", 0, "Barbell Squat", "qXTaZnJ", 3, "8", "scaled/level", 150),
+      sx("sess2", 1, "Pushups", "I4hDWkc", 3, "12-20", "BW", 60),
+      sx("sess2", 2, "Plank", "CosupLu", 3, "45s", "BW", 45),
+    ],
     review: {
       id: "r2",
       session_id: "sess2",
@@ -274,6 +308,11 @@ export const DEMO_SESSIONS: Session[] = [
     student_name: "Sara M.",
     day_title: "Full Body A",
     program_title: "Group — Morning Strength Crew",
+    exercises: [
+      sx("sess3", 0, "Barbell Squat", "qXTaZnJ", 3, "8", "scaled/level", 150),
+      sx("sess3", 1, "Pushups", "I4hDWkc", 3, "12-20", "BW", 60),
+      sx("sess3", 2, "Plank", "CosupLu", 3, "45s", "BW", 45),
+    ],
     review: {
       id: "r3",
       session_id: "sess3",
@@ -294,6 +333,11 @@ export const DEMO_SESSIONS: Session[] = [
     student_name: "Amine B.",
     day_title: "Lower — Squat",
     program_title: "Hypertrophy Block — Amine",
+    exercises: [
+      sx("sess4", 0, "Barbell Squat", "qXTaZnJ", 4, "6-8", "100kg", 180),
+      sx("sess4", 1, "Romanian Deadlift", "wQ2c4XD", 3, "8-10", "80kg", 120),
+      sx("sess4", 2, "Standing Calf Raises", "8ozhUIZ", 4, "15", "BW+20kg", 60),
+    ],
     review: null,
   },
   {
@@ -306,6 +350,10 @@ export const DEMO_SESSIONS: Session[] = [
     student_name: "Omar K.",
     day_title: "Full Body B",
     program_title: "Group — Morning Strength Crew",
+    exercises: [
+      sx("sess5", 0, "Barbell Deadlift", "ila4NZS", 3, "6", "scaled/level", 180),
+      sx("sess5", 1, "Pullups", "lBDjFxJ", 3, "AMRAP", "BW", 90),
+    ],
     review: null,
   },
 ];

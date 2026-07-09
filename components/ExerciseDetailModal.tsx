@@ -44,7 +44,7 @@ export default function ExerciseDetailModal({
           </h2>
           <button
             onClick={onClose}
-            className="cursor-pointer text-text-dim hover:text-text"
+            className="-m-1.5 cursor-pointer p-1.5 text-text-dim hover:text-text"
           >
             ✕
           </button>

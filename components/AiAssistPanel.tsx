@@ -59,7 +59,7 @@ export default function AiAssistPanel({
   }
 
   return (
-    <div className="flex h-full w-96 shrink-0 flex-col border-l border-border bg-surface">
+    <div className="fixed inset-0 z-50 flex w-full flex-col bg-surface lg:static lg:z-auto lg:h-full lg:w-96 lg:shrink-0 lg:border-l lg:border-border">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-ai/15 text-ai">

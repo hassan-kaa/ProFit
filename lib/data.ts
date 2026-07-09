@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createClient, isSupabaseConfigured } from "./supabase/client";
 import {
+  DEMO_COACH,
   DEMO_PROGRAMS,
   DEMO_SESSIONS,
   DEMO_STUDENTS,
@@ -28,6 +29,7 @@ import type {
   Program,
   ProgramExercise,
   Session,
+  SessionExercise,
   SessionReview,
 } from "./types";
 
@@ -87,20 +89,44 @@ export function weekDates(today = getToday()): string[] {
 const DEMO_STATE_KEY = "profit-demo-v1";
 const DEMO_STUDENT_KEY = "profit-demo-student";
 
-function demoSessions(): Session[] {
+function demoState(): { programs: Program[]; sessions: Session[] } {
   try {
     const raw = localStorage.getItem(DEMO_STATE_KEY);
-    if (raw) return (JSON.parse(raw) as { sessions: Session[] }).sessions;
+    if (raw) {
+      const parsed = JSON.parse(raw) as {
+        programs?: Program[];
+        sessions?: Session[];
+      };
+      return {
+        programs: parsed.programs ?? DEMO_PROGRAMS,
+        sessions: parsed.sessions ?? DEMO_SESSIONS,
+      };
+    }
   } catch {
     /* fall through */
   }
-  return DEMO_SESSIONS;
+  return { programs: DEMO_PROGRAMS, sessions: DEMO_SESSIONS };
+}
+
+function demoPrograms(): Program[] {
+  return demoState().programs;
+}
+
+function demoSessions(): Session[] {
+  return demoState().sessions;
+}
+
+function demoSave(patch: Partial<{ programs: Program[]; sessions: Session[] }>) {
+  localStorage.setItem(DEMO_STATE_KEY, JSON.stringify({ ...demoState(), ...patch }));
+  notify();
 }
 
 function demoMutateSession(id: string, fn: (s: Session) => Session) {
-  const sessions = demoSessions().map((s) => (s.id === id ? fn(s) : s));
-  localStorage.setItem(DEMO_STATE_KEY, JSON.stringify({ sessions }));
-  notify();
+  demoSave({ sessions: demoSessions().map((s) => (s.id === id ? fn(s) : s)) });
+}
+
+function demoMutateProgram(id: string, fn: (p: Program) => Program) {
+  demoSave({ programs: demoPrograms().map((p) => (p.id === id ? fn(p) : p)) });
 }
 
 function demoStudentId(): string {
@@ -109,15 +135,11 @@ function demoStudentId(): string {
 }
 
 function demoFindDay(dayId: string) {
-  for (const program of DEMO_PROGRAMS) {
+  for (const program of demoPrograms()) {
     const day = program.days.find((d) => d.id === dayId);
     if (day) return { program, day };
   }
   return null;
-}
-
-function demoAttachExercises(s: Session): Session {
-  return { ...s, exercises: demoFindDay(s.program_day_id)?.day.exercises ?? [] };
 }
 
 function demoIsProgramMate(studentId: string, s: Session): boolean {
@@ -172,8 +194,8 @@ function mapSession(row: any): Session {
     student_name: student?.full_name ?? undefined,
     day_title: day?.title ?? undefined,
     program_title: prog?.title ?? undefined,
-    exercises: day?.program_exercises
-      ? [...day.program_exercises].sort(
+    exercises: row.session_exercises
+      ? [...row.session_exercises].sort(
           (a: any, b: any) => a.position - b.position
         )
       : undefined,
@@ -183,8 +205,8 @@ function mapSession(row: any): Session {
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 const SESSION_SELECT =
-  "*, session_reviews(*), profiles(full_name), " +
-  "program_days!inner(title, program_exercises(*), programs!inner(title, coach_id))";
+  "*, session_reviews(*), profiles(full_name), session_exercises(*), " +
+  "program_days!inner(title, programs!inner(title))";
 
 /* ================================================================== */
 /* auth & profile                                                      */
@@ -235,7 +257,7 @@ export function useCurrentStudent() {
 /* ================================================================== */
 
 export async function fetchPrograms(): Promise<Program[]> {
-  if (demoMode()) return DEMO_PROGRAMS;
+  if (demoMode()) return demoPrograms();
   const sb = createClient();
   const { data, error } = await sb
     .from("programs")
@@ -250,7 +272,7 @@ export function usePrograms(): Program[] {
 }
 
 export async function fetchProgram(id: string): Promise<Program | null> {
-  if (demoMode()) return DEMO_PROGRAMS.find((p) => p.id === id) ?? null;
+  if (demoMode()) return demoPrograms().find((p) => p.id === id) ?? null;
   const sb = createClient();
   const { data } = await sb
     .from("programs")
@@ -273,7 +295,32 @@ export function useProgram(id: string) {
 }
 
 export async function createProgram(): Promise<string | null> {
-  if (demoMode()) return null;
+  if (demoMode()) {
+    const id = `demo-${crypto.randomUUID()}`;
+    const program: Program = {
+      id,
+      coach_id: DEMO_COACH.id,
+      title: "New program",
+      description: null,
+      scope: "individual",
+      group_id: null,
+      student_id: null,
+      cadence: "weekly",
+      start_date: null,
+      is_active: true,
+      days: Array.from({ length: 7 }, (_, i) => ({
+        id: `${id}-d${i}`,
+        program_id: id,
+        day_index: i,
+        title: null,
+        notes: null,
+        is_rest: i >= 5,
+        exercises: [],
+      })),
+    };
+    demoSave({ programs: [...demoPrograms(), program] });
+    return id;
+  }
   const sb = createClient();
   const {
     data: { user },
@@ -301,7 +348,10 @@ export async function createProgram(): Promise<string | null> {
  * so their ids — and any sessions pointing at them — survive the save.
  */
 export async function saveProgram(p: Program): Promise<void> {
-  if (demoMode()) return; // builder state stays local in demo
+  if (demoMode()) {
+    demoMutateProgram(p.id, () => p);
+    return;
+  }
   const sb = createClient();
 
   const { error: progErr } = await sb
@@ -413,17 +463,67 @@ export async function enrollStudentByEmail(
 
 /**
  * Links a program to a student and generates one session per training day
- * for the current week (idempotent thanks to the unique index).
+ * for the current week (idempotent thanks to the unique index), snapshotting
+ * each day's current exercises onto the new session so later program edits
+ * don't retroactively change it.
  */
 export async function assignProgramToStudent(
   programId: string,
   studentId: string
 ): Promise<{ created: number; error?: string }> {
-  if (demoMode())
-    return {
-      created: 0,
-      error: "Demo mode — connect Supabase to assign programs.",
-    };
+  if (demoMode()) {
+    const program = demoPrograms().find((p) => p.id === programId);
+    if (!program) return { created: 0, error: "Program not found." };
+    demoMutateProgram(programId, (p) => ({
+      ...p,
+      student_id: studentId,
+      scope: "individual",
+    }));
+
+    const week = weekDates();
+    const existing = demoSessions();
+    const studentName = DEMO_STUDENTS.find((s) => s.id === studentId)?.full_name;
+    const newSessions: Session[] = [];
+    for (const day of program.days) {
+      if (day.is_rest) continue;
+      const scheduled_date = week[day.day_index] ?? week[0];
+      const dup = existing.some(
+        (s) =>
+          s.program_day_id === day.id &&
+          s.student_id === studentId &&
+          s.scheduled_date === scheduled_date
+      );
+      if (dup) continue;
+      const sessionId = `demo-sess-${crypto.randomUUID()}`;
+      newSessions.push({
+        id: sessionId,
+        program_day_id: day.id,
+        student_id: studentId,
+        scheduled_date,
+        status: "scheduled",
+        shared: false,
+        student_name: studentName,
+        day_title: day.title ?? undefined,
+        program_title: program.title,
+        exercises: day.exercises.map((e, i) => ({
+          id: `${sessionId}-e${i}`,
+          session_id: sessionId,
+          position: i,
+          exercise_ref: e.exercise_ref,
+          exercise_name: e.exercise_name,
+          sets: e.sets,
+          reps: e.reps,
+          load: e.load,
+          rest_seconds: e.rest_seconds,
+          notes: e.notes,
+        })),
+        review: null,
+      });
+    }
+    demoSave({ sessions: [...demoSessions(), ...newSessions] });
+    return { created: newSessions.length };
+  }
+
   const sb = createClient();
 
   const { error: linkErr } = await sb
@@ -434,7 +534,7 @@ export async function assignProgramToStudent(
 
   const { data: days } = await sb
     .from("program_days")
-    .select("id, day_index, is_rest")
+    .select("id, day_index, is_rest, program_exercises(*)")
     .eq("program_id", programId);
 
   const week = weekDates();
@@ -448,15 +548,45 @@ export async function assignProgramToStudent(
 
   if (rows.length === 0) return { created: 0 };
 
-  const { error } = await sb
+  const { data: inserted, error } = await sb
     .from("sessions")
     .upsert(rows, {
       onConflict: "program_day_id,student_id,scheduled_date",
       ignoreDuplicates: true,
-    });
+    })
+    .select("id, program_day_id");
   if (error) return { created: 0, error: error.message };
+
+  const exercisesByDay = new Map<string, ProgramExercise[]>(
+    (days ?? []).map((d) => [
+      d.id as string,
+      ((d.program_exercises ?? []) as ProgramExercise[])
+        .slice()
+        .sort((a, b) => a.position - b.position),
+    ])
+  );
+  const exerciseRows = (inserted ?? []).flatMap((s) =>
+    (exercisesByDay.get(s.program_day_id as string) ?? []).map((e, i) => ({
+      session_id: s.id,
+      position: i,
+      exercise_ref: e.exercise_ref,
+      exercise_name: e.exercise_name,
+      sets: e.sets,
+      reps: e.reps,
+      load: e.load,
+      rest_seconds: e.rest_seconds,
+      notes: e.notes,
+    }))
+  );
+  if (exerciseRows.length) {
+    const { error: exErr } = await sb
+      .from("session_exercises")
+      .insert(exerciseRows);
+    if (exErr) return { created: 0, error: exErr.message };
+  }
+
   notify();
-  return { created: rows.length };
+  return { created: (inserted ?? []).length };
 }
 
 /* ================================================================== */
@@ -480,16 +610,18 @@ export function useGroups(): Group[] {
 
 /** all sessions across the coach's programs */
 export async function fetchCoachSessions(): Promise<Session[]> {
-  if (demoMode()) return demoSessions().map(demoAttachExercises);
+  if (demoMode()) return demoSessions();
   const sb = createClient();
   const {
     data: { user },
   } = await sb.auth.getUser();
   if (!user) return [];
+  // RLS ("coach manages sessions of own programs") already scopes this to
+  // the coach's own sessions — no need to re-filter by coach_id here (a
+  // two-level-deep nested-embed filter proved unreliable).
   const { data, error } = await sb
     .from("sessions")
     .select(SESSION_SELECT)
-    .eq("program_days.programs.coach_id", user.id)
     .order("scheduled_date");
   if (error) throw error;
   return (data ?? []).map(mapSession);
@@ -502,9 +634,7 @@ export function useCoachSessions(): Session[] {
 /** the logged-in (or demo-selected) student's sessions */
 export async function fetchMySessions(): Promise<Session[]> {
   if (demoMode())
-    return demoSessions()
-      .filter((s) => s.student_id === demoStudentId())
-      .map(demoAttachExercises);
+    return demoSessions().filter((s) => s.student_id === demoStudentId());
   const sb = createClient();
   const {
     data: { user },
@@ -527,7 +657,7 @@ export function useMySessions(): Session[] {
 export async function fetchMyPrograms(): Promise<Program[]> {
   if (demoMode()) {
     const sid = demoStudentId();
-    return DEMO_PROGRAMS.filter(
+    return demoPrograms().filter(
       (p) =>
         p.student_id === sid ||
         (p.group_id && DEMO_GROUP_MEMBERS[p.group_id]?.includes(sid))
@@ -564,11 +694,9 @@ export function useMyPrograms(): Program[] {
 export async function fetchSharedSessions(): Promise<Session[]> {
   if (demoMode()) {
     const sid = demoStudentId();
-    return demoSessions()
-      .filter(
-        (s) => s.shared && s.student_id !== sid && demoIsProgramMate(sid, s)
-      )
-      .map(demoAttachExercises);
+    return demoSessions().filter(
+      (s) => s.shared && s.student_id !== sid && demoIsProgramMate(sid, s)
+    );
   }
   const sb = createClient();
   const {
@@ -651,5 +779,77 @@ export async function toggleShare(
   }
   const sb = createClient();
   await sb.from("sessions").update({ shared }).eq("id", sessionId);
+  notify();
+}
+
+/* ---- session mutations (coach) ---- */
+
+export async function rescheduleSession(
+  sessionId: string,
+  date: string
+): Promise<{ error?: string }> {
+  if (demoMode()) {
+    const session = demoSessions().find((s) => s.id === sessionId);
+    if (!session) return { error: "Session not found." };
+    const conflict = demoSessions().some(
+      (s) =>
+        s.id !== sessionId &&
+        s.program_day_id === session.program_day_id &&
+        s.student_id === session.student_id &&
+        s.scheduled_date === date
+    );
+    if (conflict)
+      return { error: "This student already has a session that day." };
+    demoMutateSession(sessionId, (s) => ({ ...s, scheduled_date: date }));
+    return {};
+  }
+  const sb = createClient();
+  const { error } = await sb
+    .from("sessions")
+    .update({ scheduled_date: date })
+    .eq("id", sessionId);
+  if (error) {
+    if (error.code === "23505")
+      return { error: "This student already has a session that day." };
+    return { error: error.message };
+  }
+  notify();
+  return {};
+}
+
+/** replaces a single session's exercise snapshot — the program day itself is untouched */
+export async function updateSessionExercises(
+  sessionId: string,
+  exercises: Pick<
+    SessionExercise,
+    | "exercise_ref"
+    | "exercise_name"
+    | "sets"
+    | "reps"
+    | "load"
+    | "rest_seconds"
+    | "notes"
+  >[]
+): Promise<void> {
+  if (demoMode()) {
+    demoMutateSession(sessionId, (s) => ({
+      ...s,
+      exercises: exercises.map((e, i) => ({
+        id: `${sessionId}-e${i}`,
+        session_id: sessionId,
+        position: i,
+        ...e,
+      })),
+    }));
+    return;
+  }
+  const sb = createClient();
+  await sb.from("session_exercises").delete().eq("session_id", sessionId);
+  if (exercises.length) {
+    const { error } = await sb
+      .from("session_exercises")
+      .insert(exercises.map((e, i) => ({ session_id: sessionId, position: i, ...e })));
+    if (error) throw error;
+  }
   notify();
 }
