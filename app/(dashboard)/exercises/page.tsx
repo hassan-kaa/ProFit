@@ -94,7 +94,9 @@ export default function ExercisesPage() {
           >
             <ExerciseAnimation gifUrl={e.gifUrl} alt={e.name} className="h-36 w-full" />
             <div className="p-3">
-              <p className="line-clamp-2 text-sm font-medium">{e.name}</p>
+              <p className="line-clamp-2 min-h-10 text-sm font-medium">
+                {e.name}
+              </p>
               <div className="mt-2 flex flex-wrap gap-1">
                 <Badge color="primary">
                   {e.primaryMuscles[0] ?? e.trainingType ?? "exercise"}

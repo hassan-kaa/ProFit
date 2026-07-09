@@ -83,36 +83,40 @@ export default function ExercisePickerModal({
           </Button>
         </div>
 
-        <div className="grid flex-1 grid-cols-2 gap-3 overflow-y-auto p-4 sm:grid-cols-3">
+        <div className="flex-1 overflow-y-auto p-4">
           {error && (
-            <p className="col-span-full text-sm text-danger">
+            <p className="text-sm text-danger">
               Could not load the exercise database. Check your connection.
             </p>
           )}
           {!all && !error && (
-            <p className="col-span-full text-sm text-text-dim">
-              Loading exercise library…
-            </p>
+            <p className="text-sm text-text-dim">Loading exercise library…</p>
           )}
-          {results.map((e) => (
-            <button
-              key={e.id}
-              onClick={() => onPick(e)}
-              className="group overflow-hidden rounded-lg border border-border bg-surface-2 text-left transition-colors hover:border-primary/60"
-            >
-              <ExerciseAnimation gifUrl={e.gifUrl} alt={e.name} className="h-28 w-full" />
-              <div className="p-2">
-                <p className="line-clamp-2 text-xs font-medium">{e.name}</p>
-                <div className="mt-1">
-                  <Badge color="primary">
-                    {e.primaryMuscles[0] ?? e.trainingType ?? "exercise"}
-                  </Badge>
-                </div>
-              </div>
-            </button>
-          ))}
           {all && results.length === 0 && (
-            <p className="col-span-full text-sm text-text-dim">No matches.</p>
+            <p className="text-sm text-text-dim">No matches.</p>
+          )}
+          {results.length > 0 && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {results.map((e) => (
+                <button
+                  key={e.id}
+                  onClick={() => onPick(e)}
+                  className="group overflow-hidden rounded-lg border border-border bg-surface-2 text-left transition-colors hover:border-primary/60"
+                >
+                  <ExerciseAnimation gifUrl={e.gifUrl} alt={e.name} className="h-28 w-full" />
+                  <div className="p-2">
+                    <p className="line-clamp-2 min-h-8 text-xs font-medium">
+                      {e.name}
+                    </p>
+                    <div className="mt-1">
+                      <Badge color="primary">
+                        {e.primaryMuscles[0] ?? e.trainingType ?? "exercise"}
+                      </Badge>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
